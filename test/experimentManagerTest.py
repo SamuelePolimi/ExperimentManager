@@ -80,9 +80,28 @@ class ExperimentManagerTest(unittest.TestCase):
         self.assertTrue(test.testCase["mlp"].cmd == "finalPendulum")
         
         
+    def addCoding(self):
+        manager = ExperimentManager()
+        manager.loadExperiment("experiment/experiment1")
+        manager.addCoding("n_neuron=10","small")
+        self.assertTrue(manager.code(["n_neuron=10"])=="small")
+        self.assertTrue(manager.decode(["small"])[0]=="n_neuron=10")
+        #self.assertRaises(manager.addCoding("n_neuron=100","small"))
+        #self.assertRaises(manager.addCoding("n_neuron=10","medium"))
+        
+    def afterAddCoding(self):
+        manager = ExperimentManager()
+        manager.loadExperiment("experiment/experiment1")
+        self.assertTrue(manager.code(["n_neuron=10"])=="small")
+        self.assertTrue(manager.decode(["small"])[0]=="n_neuron=10")
+        #self.assertRaises(manager.addCoding("n_neuron=100","small"))
+        #self.assertRaises(manager.addCoding("n_neuron=10","medium"))
+        
     def test(self):
         
         self.checkCreateTest()
         self.loadTest()
         self.addCase()
         self.loadCase()
+        self.addCoding()
+        self.afterAddCoding()

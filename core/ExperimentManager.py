@@ -16,6 +16,8 @@ class ExperimentManager(object):
         self.info = None
         self.log = None
         self.n_experiments = None
+        self.coder = {}
+        self.decoder = {}
         
     """Create a new Experiment"""
     #TODO: remember to check if we are over writing something
@@ -39,11 +41,17 @@ class ExperimentManager(object):
         fout.close()
         fout = open(folder + "/experimentsParams.log","w")
         fout.close()
+        fout = open(folder + "/experimentsVariables.log","w")
+        fout.close()
+        fout = open(folder + "/experimentsCoding.log","w")
+        fout.close()
         self.n_experiments = 0
         self.folder = folder
         self.name = name
         self.info = info
         self.log = []
+        self.coder = {}
+        self.decoder = {}
         
     """
     Load all the experiments
@@ -127,10 +135,52 @@ class ExperimentManager(object):
         experimentsPostComment.close()
         experimentsTag.close()
         
+        # ---------------------------------------------------------------------
+        # Load variables section
+        # ---------------------------------------------------------------------
+        
+        experimentsVariables = open(folder + "/experimentsVariables.log", 'rb')
+        csvVariables = csv.reader(experimentsVariables)
+        
+        for variable in csvVariables:
+            type_ = variable[0]
+            dim = variable[1]
+            name = variable[2]
+            #TODO: implement variables
+            
+        # ---------------------------------------------------------------------
+        # Load params coding section
+        # ---------------------------------------------------------------------
+            
+        experimentsCoding = open(folder + "/experimentsCoding.log", 'rb')
+        csvCoding = csv.reader(experimentsCoding)
+        
+        for coding in csvCoding:
+            param = coding[0]
+            code = coding[1]
+            self.coder[param] = code
+            self.decoder[code] = param
+        
         if verbose:
             print("Number of ExperimentsTest loaded: " + str(self.n_experiments))
             print("-"*10)
             
+            
+    def addCoding(self, param, code):
+        if '_' in code:
+            raise "Code shouln't contain '_' character"
+        experimentsCoding = open(self.folder + "/experimentsCoding.log", 'w')
+        if(not param in self.coder and not code in self.decoder):
+            experimentsCoding.write(param + "," + str(code) + "\n")
+        else:
+            raise "Param or code already present"
+        self.coder[param] = code
+        self.decoder[code] = param
+        experimentsCoding.close()
+        
+        
+    def addVariable(self, type_, dim, name):
+        raise "Not Implemented yet"
     """newExperimentTest creates a new test. We can define parameters in common to all the testCases. 
     We can write a comment to explain something. Comment should be of one line
     """
@@ -193,9 +243,30 @@ class ExperimentManager(object):
     def printExperiment(self):
         for exp in self.log[0:1]:
             print exp
-            
+    
+    """This function take the codificable params, and tranform it in a code
+    """     
     def code(self, params):
-        raise "Not Implemented yet"
+        ret = ""
+        for p in params[0,-1]:
+            try:
+                ret += self.coder[p] + "_"
+            except:
+                raise "Parameter not coded"
+        try:
+            ret += self.coder[params[-1]] 
+        except:
+            raise "Parameter not coded"
+        return ret
         
+    """This function take the code and transform it in params
+    """     
     def decode(self, code):
-        raise "Not Implemented yet"
+        ret = []
+        codes = code.split('_')
+        for c in codes:
+            try:
+                ret.append(self.decoder[c])
+            except:
+                raise "Code not parametrizable"
+        return ret

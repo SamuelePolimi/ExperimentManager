@@ -57,27 +57,18 @@ class ExperimentCase:
                 cmd = testCommand.readline()[0:-1]
                 
                 #TODO: set params
-                params = []
+                params = self.experiment.decode(code)
                 
-                samples[code].append(ExperimentSample(self.experiment, self.test, self, time_start, time_end, duration, params, var_param, cmd))
+                #TODO: add closed and error
+                self.samples[code].append(ExperimentSample(self.experiment, self.test, self, time_start, time_end, duration, params, var_param, cmd))
                 #def __init__(self, experiment, test, case, time_start, time_end, duration, params, var_param, cmd):
                 
-            
-                
-            
-            
-        
-        
-        
         pass
         
     def executeSample(self, id_):
         raise "Not Implemented yet"
         
     def executeSamlpes(self):
-        raise "Not Implemented yet"
-        
-    def paramCoding(self):
         raise "Not Implemented yet"
         
     """All params here should be codificable
