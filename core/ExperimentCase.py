@@ -1,4 +1,5 @@
 import csv
+import os
 from core.ExperimentSample import ExperimentSample
 
 class ExperimentCase:
@@ -60,9 +61,14 @@ class ExperimentCase:
                 params = self.experiment.decode(code)
                 
                 #TODO: add closed and error
-                self.samples[code].append(ExperimentSample(self.experiment, self.test, self, time_start, time_end, duration, params, var_param, cmd))
+                if code in self.samples:
+                    self.samples[code].append(ExperimentSample(self.experiment, self.test, self, time_start, time_end, duration, params, var_param, cmd, closed, valid, error))
+                else:
+                    self.samples[code] = [ExperimentSample(self.experiment, self.test, self, time_start, time_end, duration, params, var_param, cmd, closed, valid, error)]
                 #def __init__(self, experiment, test, case, time_start, time_end, duration, params, var_param, cmd):
                 
+            testParam.close()
+            testCommand.close()
         pass
         
     def executeSample(self, id_):
@@ -78,6 +84,39 @@ class ExperimentCase:
         var_param = ["randomWeights1.txt"]        
     """
     def addSample(self, params, var_param):
+        
+        code = self.experiment.code(params)
+        all_params =   self.experiment.params + self.params + params + [var_param]
+        
+        command = self.cmd
+        for par in all_params[0,-1]:
+            command += par + " "
+        command += all_params[-1]
+        
+        if code in self.samples:
+            self.samples[code].append(ExperimentSample(self.experiment, self.test, self, "", "", "", params, var_param, command, False, True, False))
+        else:
+            self.samples[code] = [ExperimentSample(self.experiment, self.test, self, "", "", "", params, var_param, command, False, True, False)]
+        #TODO: create dir code
+        if not os.path.exists(self.experiment.folder +"/test" + self.test.number + "/" + self.label + "/" + code):
+            os.makedirs(self.experiment.folder +"/test" + self.test.number + "/" + self.label + "/" + code)
+        #TODO: retreive params from upper parts
+            
+        testParam = open(self.experiment.folder +"/test" + self.test.number + "/" + self.label + "/testParams" + code + ".log","w")
+            
+        testCommand = open(self.experiment.folder +"/test" + self.test.number + "/" + self.label + "/testCommands" + code + ".log","w")
+        
+        #TODO: check
+        testParam.write(var_param + "," +
+                        str(False) + "," +
+                        str(True) + "," + 
+                        str(False) + "," +
+                        "," +
+                        "," + 
+                        "\n")
+        
+        
+        testCommand.write(command + "\n")
         
         raise "Not Implemented yet"
     

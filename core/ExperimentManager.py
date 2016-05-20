@@ -2,6 +2,7 @@ import os
 import csv
 import time
 import datetime
+from core.ExperimentVariable import ExperimentVariable
 
 from core.ExperimentTest import ExperimentTest
 
@@ -52,6 +53,7 @@ class ExperimentManager(object):
         self.log = []
         self.coder = {}
         self.decoder = {}
+        self.variable = {}
         
     """
     Load all the experiments
@@ -146,6 +148,7 @@ class ExperimentManager(object):
             type_ = variable[0]
             dim = variable[1]
             name = variable[2]
+            self.variable[name] = ExperimentVariable(name, type_, dim)
             #TODO: implement variables
             
         # ---------------------------------------------------------------------
@@ -180,7 +183,15 @@ class ExperimentManager(object):
         
         
     def addVariable(self, type_, dim, name):
-        raise "Not Implemented yet"
+        
+        if name in self.variableVariable:
+            raise "Name for variable already in use"
+            
+        experimentsVariables = open(self.folder + "/experimentsVariables.log", 'a')
+        
+        experimentsVariables.write(type_ + "," + str(dim) + "," + name)
+        self.variable[name] = ExperimentVariable(name, type_, dim)
+        
     """newExperimentTest creates a new test. We can define parameters in common to all the testCases. 
     We can write a comment to explain something. Comment should be of one line
     """
