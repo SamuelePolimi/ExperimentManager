@@ -1,0 +1,4 @@
+include runner README.md
+include ExpMan/__init__.py
+recursive-include ExpMan/utils * 
+recursive-include ExpMan/core *
