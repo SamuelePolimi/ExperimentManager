@@ -9,7 +9,17 @@ An amaizing feature (that has not published yet) is to easy perform some **diagr
 
 ## Installation
 
+To install the library just go in the ExperimentManager directory and type:
+
+```sh
 sudo python setup.py install
+```
+
+To run the **expman*** (that is the executable version of the library), go in the ExperimentManager directory and type:
+
+```sh
+source expman_setup.sh
+```
 
 ## Tests
 
