@@ -262,6 +262,7 @@ help_["general"] = {
 
 print """ExpMan 1.0.0
 Type help to discover which command you can prompt.
+
 """
 
 while True:
