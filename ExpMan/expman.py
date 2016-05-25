@@ -251,9 +251,21 @@ help_["manager"] = {
 help_["test"] = {
 "newcase":"""newcase <name> <cmd>
 <name> name of the test-case
-<cmd> name of the program that runs it"""}
-help_["case"] = {"create":None}
+<cmd> name of the program that runs it""",
+"opencase":"""opencase <name>
+<name> name of the test-case""", 
+"execute":"""execute <thread-number> <refresh-time>
+<thread-number> number of thread to run (better to set = nCORE)
+<refresh-time> time in seconds to check if is possible to run a new test. A good value could be between 0.1 and 0.5
+"""}
+help_["case"] = {
+"newsample":"""newsample <param>
+<param> The param that vary for this sample. Param is in the shape <name>=<value>
+"""}
 help_["general"] = {
+"help":"""help [<command>]
+<command> It will show how to use that command.
+If no parameter is passed, then it will show the list of possible commands in the current context.""",
 "exit":"It will return to the command line.",
  "up":"""It will go to the upper mode Eg:
  Exp1>test0>up
