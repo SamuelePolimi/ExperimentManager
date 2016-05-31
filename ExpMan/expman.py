@@ -1,6 +1,8 @@
 #!/usr/bin/python
 from ExpMan.core.ExperimentManager import ExperimentManager
+import readline
 
+readline.read_history_file(".history")
 manager_obj = ExperimentManager()
 
 actual = "start"
@@ -18,7 +20,7 @@ def checkIsParam(param, throw=False):
         else:
             print "Param must be in the shape <name>=<value>"
             return False
-    if "," in param or "_" in param:
+    if "," in param:
         if throw:
             raise Exception("Param must not contain commas or underscores")
         else:
@@ -150,6 +152,7 @@ def openTest(params):
     actualOut = manager_obj.name + ">test" + str(test.number) + ">"
     actual = "test"
     obj["test"] = test
+        
 
 def showLast(params):
     global actual, actualOut,obj
@@ -177,7 +180,31 @@ def createSample(params):
     case.addSample(params_, params[0])
     
     print "Sample added"
-
+    
+def plotVar(params):
+    global actual, actualOut,obj
+    if actual!="case":
+        raise Exception("Not in the right context")
+    if len(params)<1:
+        raise Exception("Incorrect number of parameters")
+    case = obj["case"]
+    case.plotVariable(params[0], params[1])
+    
+def plotTestVar(params):
+    global actual, actualOut,obj
+    if actual!="test":
+        raise Exception("Not in the right context")
+    if len(params)<1:
+        raise Exception("Incorrect number of parameters")
+    case = obj["test"]
+    case.plotVariable(params[0], params[1])
+    
+def testInfo(params):
+    global actual, actualOut,obj
+    if actual!="test":
+        raise Exception("Not in the right context")
+    print(obj["test"])
+    
 def addCoding(params):
     global actual, actualOut,obj
     if actual!="manager":
@@ -213,11 +240,12 @@ def execute(params):
     obj["test"].execute(int(params[0]), float(params[1]))
     #execute(n_thread, refresh_time)
 
+
     
 cmd["start"] = {"create":createExperiment, "load":loadExperiment}
 cmd["manager"] = {"newtest":newTest, "opentest":openTest, "showlast":showLast, "addcoding":addCoding, "addvariable":addVariable}
-cmd["test"] = {"newcase":createCase, "opencase":openCase, "execute":execute}
-cmd["case"] = {"newsample":createSample}
+cmd["test"] = {"newcase":createCase, "opencase":openCase, "execute":execute,"plotvar":plotTestVar, "info":testInfo}
+cmd["case"] = {"newsample":createSample,"plotvar":plotVar}
 
 #------------------------------------------------------------------------------
 # Help section
@@ -256,16 +284,22 @@ help_["test"] = {
 <name> name of the test-case""", 
 "execute":"""execute <thread-number> <refresh-time>
 <thread-number> number of thread to run (better to set = nCORE)
-<refresh-time> time in seconds to check if is possible to run a new test. A good value could be between 0.1 and 0.5
-"""}
+<refresh-time> time in seconds to check if is possible to run a new test. A good value could be between 0.1 and 0.5""",
+"plotvar":"""plotvar <code> <var_name>
+<code> code of the sample set
+<var_name> name of the variable you want to plot""",
+"info":"""info
+get the test's info"""}
 help_["case"] = {
 "newsample":"""newsample <param>
-<param> The param that vary for this sample. Param is in the shape <name>=<value>
-"""}
+<param> The param that vary for this sample. Param is in the shape <name>=<value>""",
+"plotvar":"""plotvar <code> <var_name>
+<code> code of the sample set
+<var_name> name of the variable you want to plot"""}
 help_["general"] = {
 "help":"""help [<command>]
 <command> It will show how to use that command.
-If no parameter is passed, then it will show the list of possible commands in the current context.""",
+If no parameter is passed, then it will show the list of possible commands inserted the current context.""",
 "exit":"It will return to the command line.",
  "up":"""It will go to the upper mode Eg:
  Exp1>test0>up
@@ -277,10 +311,13 @@ Type help to discover which command you can prompt.
 """
 
 while True:
+    readline.write_history_file(".history")
     comand = raw_input(actualOut)
     cmds_ = comand.split(" ")
     cmds = [x for x in cmds_ if x !=""]
     
+    if(len(cmds)==0):
+        continue
     if cmds[0]=="exit":
         break
     if cmds[0]=="help":

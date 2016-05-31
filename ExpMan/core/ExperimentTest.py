@@ -4,6 +4,8 @@ import time
 import datetime
 import subprocess
 from random import shuffle
+import numpy as np
+import ExpMan.utils.samplePlotter as plotter
 
 from ExpMan.core.ExperimentCase import ExperimentCase
 
@@ -20,6 +22,7 @@ class ExperimentTest(object):
         self.user = user
         self.valid = valid
         self.testCase = {}
+        self.path = self.experiment.folder + "/test" + str(self.number) 
         #TODO: implement
         #self.controlVariable
     
@@ -63,13 +66,38 @@ class ExperimentTest(object):
             comment = testComments.readline()[0:-1]
             
             testCase = ExperimentCase(self.experiment, self, name, cmd, time_init, params, comment ,close,valid)
+            testCase.loadSamples()
             #def __init__(self, experiment, test, label, cmd, time, params, comment, close, valid):
             self.testCase[name] = testCase
         
         testCases.close()
         testParams.close()
         testComments.close()
+        
+    def plotVariable(self, code, var_name):
+        print("plot")
+        data = []
+        ranges = []
+        for key in self.testCase:
             
+            case = self.testCase[key]
+            case_dic ={}
+            case_dic["name"] = case.label
+            mean = case.getMean(code,var_name)
+            case_dic["mean"] = mean.tolist()
+            std = case.getStd(code,var_name)
+            case_dic["std"] = std.tolist()
+            data.append(case_dic)
+            ranges.append((mean-std).tolist())
+            ranges.append((mean+std).tolist())
+        ranges = np.array(ranges)
+        min_range = np.min(ranges)
+        max_range = np.max(ranges)
+        if not os.path.exists(self.path + "/" + str(code)):
+            os.makedirs(self.path + "/" + str(code))
+        plotter.multiOneDimPlot(data,"n_iteration",var_name,(min_range*1.1,max_range*1.1), self.path + "/" + str(code) + "/"+ var_name + ".jpg")
+        #multiOneDimPlot(data,xlabel,ylabel,ylim,path):
+        
     #TODO: what to do if the case is not Valid?!
     def openTestCase(self,name):
         return self.testCase[name]
@@ -129,6 +157,7 @@ class ExperimentTest(object):
         raise "Not implemented yet"
         
     def execute(self, nThread, refresh_time=.2,shuffled=True):
+        
         commands = []
         for case in self.testCase:
             self.testCase[case].loadSamples()
@@ -138,22 +167,37 @@ class ExperimentTest(object):
             
         processes = set()
         #command should be a list
-        for command in commands:
-            processes.add(subprocess.Popen(command))
-            while len(processes) >= nThread:
-                time.sleep(refresh_time)
-                processes.difference_update([p for p in processes if p.poll() is not None])
+        try:
+            for command in commands:
+                processes.add(subprocess.Popen(command))
+                while len(processes) >= nThread:
+                    time.sleep(refresh_time)
+                    processes.difference_update([p for p in processes if p.poll() is not None])
         
-        for p in processes:
-            if p.poll() is None:
-                p.wait()
+            for p in processes:
+                if p.poll() is None:
+                    p.wait()
+        except KeyboardInterrupt:
+            print("Keyboard interrupt catch")
+            for p in processes:
+                p.kill()
+                exit()
         
         print "All sample executed"
+        
     def __str__(self):
-        return ("N" + str(self.number) + ": " +  self.user + " " + self.time + " "
-                    +  self.comment + " closed:" + str(self.close) + (""  if self.valid else " valid:False")
-                    + "\n\t params: " + str(self.parameters)
-                    )
+        ret = "ID" + str(self.number) + ": " +  self.user + " " + self.time + " "
+        ret += "\n" + "-"*50 +"\n" + "Parameters:\n"
+        for par in self.parameters:
+            ret += "\t" + par + "\n"
+        ret += "-"*50 + "\n"
+        ret += "Cases:\n"
+        for case in self.testCase:
+            ret += "\t" +case + "\n"
+        ret += "-"*50 + "\n"
+        ret += "Comment:" + self.comment
+        return ret
+                    
         
         
     

@@ -1,6 +1,8 @@
 import os.path
 import csv
 import ExpMan.utils.fileUpdater 
+import ExpMan.utils.samplePlotter as plotter
+import numpy as np
 
 class ExperimentSample:
     
@@ -25,8 +27,8 @@ class ExperimentSample:
     def addVariableResults(self, name, result):
         if self.close:
             raise Exception("ExperimentSample Already close")
-        if name in self.variable:
-            raise Exception("Value for the variable already in.")
+        #if name in self.variable:
+        #    raise Exception("Value for the variable already in.")
         if not name in self.experiment.variable:
             raise Exception("Variable not declared in the Experiment - Experiment>>add variable name type_ dim")
         
@@ -37,20 +39,41 @@ class ExperimentSample:
         dim = var_decl.dim
         type_ = var_decl.type_
         
+        #print ("dim, type_: ", dim , " " , type_)
         if (dim==0 or dim=="0") and type_ == "single":
-            var_file = open(self.path + "/" + name + ".log","w")
+            np.save(self.path + "/" + name ,result)
+            """var_file = open(self.path + "/" + name + ".log","w")
             var_file.write(str(result))
-            var_file.close()
+            var_file.close()"""
             
                 
         if (dim==0 or dim=="0") and type_ == "history":
-            var_file = open(self.path + "/" + name + ".log","w")
+            np.save(self.path + "/" + name ,result)
+            """var_file = open(self.path + "/" + name + ".log","w")
             for res in result[0:-1]:
                 var_file.write(str(res) + ",")
             var_file.write(str(result[-1]) + "\n")
-            var_file.close()
+            var_file.close()"""
         
         self.variable[name] = result
+        print("var wrote: " , name, "=", result)
+    
+    def plotVariable(self,name):
+        if not name in self.experiment.variable:
+            raise Exception("Variable not declared in the Experiment - Experiment>>add variable name type_ dim")
+        
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
+            
+        var_decl = self.experiment.variable[name]
+        dim = var_decl.dim
+        type_ = var_decl.type_
+        
+        if (dim==0 or dim=="0") and type_ == "history":
+            val = self.variable[name]
+            plotter.oneDimPlot(val.tolist(),self.path + "/" + name + ".jpg",name,"n_iteration", name, (np.min(val)*1.1,np.max(val)*1.1))
+                               #oneDimPlot(data, path,label, xlabel,ylabel, ylim):
+        
         
     def addPlotFunction(self, function, n_dim, lower_shape, higher_shape):
         raise Exception("Not implemented yet")
@@ -61,30 +84,49 @@ class ExperimentSample:
         self.close = True
         
     def load(self):
-        for var in self.experiment.variable:
+        self.variable = {}
+        for key in self.experiment.variable:
             
+            var = self.experiment.variable[key]
             dim = var.dim
             name = var.name
             type_ = var.type_
             
-            if os.path.isfile(self.path + "/" + var.name + ".log"):
-                
+            if os.path.isfile(self.path + "/" + var.name + ".npy"):
                 if (dim==0 or dim=="0") and type_ == "single":
-                    var_file = open(self.path + "/" + var.name + ".log","r")
+                    """var_file = open(self.path + "/" + var.name + ".log","r")
                     val = var_file.readline()
-                    val = float(val)
-                    self.variable[var.name] = val
-                    var_file.close()
+                    val = float(val)"""
+                    a = np.load(self.path + "/" + var.name + ".npy")
+                    self.variable[name] = a
+                    #var_file.close()
                     continue
                 
                 if (dim==0 or dim=="0") and type_ == "history":
-                    var_file = open(self.path + "/" + var.name + ".log","rb")
+                    """var_file = open(self.path + "/" + var.name + ".log","rb")
                     csvFile = csv.reader(var_file)
                     row = csvFile.next()
                     self.variable[name] = []
                     for val in row:
-                        self.variable[name].append(val)
+                        self.variable[name].append(val)"""
+                    a = np.load(self.path + "/" + var.name + ".npy")
+                    self.variable[name] = a
                     continue
+            
+            
+            if (dim==1 or dim=="1") and type_ == "history":
+                """var_file = open(self.path + "/" + var.name + ".log","rb")
+                csvFile = csv.reader(var_file)
+                row = csvFile.next()
+                self.variable[name] = []
+                for val in row:
+                    self.variable[name].append(val)"""
+                n_var = 0
+                while os.path.isfile(self.path + "/" + var.name + str(n_var) + ".npy"):
+                    self.variable[name].append(np.load(self.path + "/" + var.name + str(n_var) + ".npy"))
+                    n_var+=1
+                    
+                continue
         
     def getCommandLine(self,mOpt=True):
         """let's see if to keep python or not"""
@@ -94,9 +136,9 @@ class ExperimentSample:
         code = sys.argv[5]
         number = sys.argv[6]"""
         if(mOpt):
-            return ["python","-m", self.cmd[0], self.experiment.folder , str(self.test.number), self.case.label,str(self.code), str(self.num), self.var_param] + self.params
+            return ["python","-m", self.cmd[0], self.experiment.folder , str(self.test.number), self.case.label,str(self.code), str(self.num), self.var_param] + self.test.parameters + self.case.params +  self.params
         else:
-            return ["python", self.cmd[0], self.experiment.folder , str(self.test.number), self.case.label,str(self.code), str(self.num), self.var_param] + self.params
+            return ["python", self.cmd[0], self.experiment.folder , str(self.test.number), self.case.label,str(self.code), str(self.num), self.var_param] + self.test.parameters + self.case.params + self.params
             
         
     
