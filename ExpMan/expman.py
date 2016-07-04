@@ -161,13 +161,14 @@ def showLast(params):
     if len(params)<1:
         raise Exception("Incorrect number of parameters")
     manager = obj["manager"]
-    n = len(manager.log) - int(params[0])
+    n = len(manager.validLog) - int(params[0])
     if n< 0 or int(params[0])<=0: 
         n = 0
-    test = manager.log[n:]
+    test = manager.validLog[n:]
     
     for t in test:
-        print t
+        print t.shortInfo()
+        print "-"*50
         
 def createSample(params):
     global actual, actualOut,obj
@@ -240,11 +241,28 @@ def execute(params):
     obj["test"].execute(int(params[0]), float(params[1]))
     #execute(n_thread, refresh_time)
 
-
+    
+def unvalidate(params):
+    global actual, actualOut,obj
+    if actual!="test":
+        raise Exception("Not in the right context")
+        #TODO: check on params[0]
+    obj["test"].unvalidate()
+    print("Test not valid anymore")
+    #execute(n_thread, refresh_time)
+    
+def postComment(params):
+    global actual, actualOut,obj
+    if actual!="test":
+        raise Exception("Not in the right context")
+        #TODO: check on params[0]
+    comment = raw_input("Insert the comment: ")
+    obj["test"].modifyPostComment(comment)
+    #execute(n_thread, refresh_time)
     
 cmd["start"] = {"create":createExperiment, "load":loadExperiment}
 cmd["manager"] = {"newtest":newTest, "opentest":openTest, "showlast":showLast, "addcoding":addCoding, "addvariable":addVariable}
-cmd["test"] = {"newcase":createCase, "opencase":openCase, "execute":execute,"plotvar":plotTestVar, "info":testInfo}
+cmd["test"] = {"newcase":createCase, "opencase":openCase, "execute":execute,"plotvar":plotTestVar, "info":testInfo, "unvalidate":unvalidate, "postcomment":postComment}
 cmd["case"] = {"newsample":createSample,"plotvar":plotVar}
 
 #------------------------------------------------------------------------------
@@ -289,7 +307,11 @@ help_["test"] = {
 <code> code of the sample set
 <var_name> name of the variable you want to plot""",
 "info":"""info
-get the test's info"""}
+get the test's info""",
+"unvalidate":"""unvalidate
+makes the test not visible anymore (but you can always recover it)""",
+"postcomment":"""postcomment
+give a comment after the results of the test"""}
 help_["case"] = {
 "newsample":"""newsample <param>
 <param> The param that vary for this sample. Param is in the shape <name>=<value>""",

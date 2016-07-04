@@ -52,6 +52,7 @@ class ExperimentManager(object):
         self.name = name
         self.info = info
         self.log = []
+        self.validLog = []
         self.coder = {}
         self.decoder = {}
         self.variable = {}
@@ -101,6 +102,7 @@ class ExperimentManager(object):
         self.folder = folder
         self.n_experiments = 0
         self.log = []
+        self.validLog = []
         while True: 
             
             try:
@@ -118,8 +120,8 @@ class ExperimentManager(object):
             
             time = csvTest_next[0]
             user = csvTest_next[1]
-            close = csvTest_next[2]
-            valid = csvTest_next[3]
+            close = csvTest_next[2]=="True"
+            valid = csvTest_next[3]=="True"
             
             tags = []
             for tag in csvTag_next:
@@ -130,8 +132,11 @@ class ExperimentManager(object):
             comment = experimentsComment.readline()[0:-1]                       #Exclude the carriege return
             postComment = experimentsPostComment.readline()[0:-1]               #Exclude the carriege return 
             
-            self.log.append(ExperimentTest(self, self.n_experiments-1, time, user, tags, parameters, comment, close, postComment, valid))
-            
+            exp = ExperimentTest(self, self.n_experiments-1, time, user, tags, parameters, comment, close, postComment, valid)
+            self.log.append(exp)
+            if(valid):
+                self.validLog.append(exp)
+                
         experimentsTest.close()
         experimentsParams.close()
         experimentsComment.close()
@@ -181,7 +186,12 @@ class ExperimentManager(object):
         self.coder[param] = code
         self.decoder[code] = param
         experimentsCoding.close()
-        
+     
+    def updateValidLog(self):
+        self.validLog=[]
+        for log in self.log:
+            if(log.valid):
+                self.validLog.append(log)
         
     def addVariable(self, type_, dim, name):
         
@@ -254,7 +264,7 @@ class ExperimentManager(object):
     #TODO: do a nice print function (or better... a __str__)
     def printExperiment(self):
         for exp in self.log[0:1]:
-            print exp
+            print exp.shortInfo()
     
     """This function take the codificable params, and tranform it in a code
     """     

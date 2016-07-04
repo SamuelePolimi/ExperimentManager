@@ -6,6 +6,7 @@ import subprocess
 from random import shuffle
 import numpy as np
 import ExpMan.utils.samplePlotter as plotter
+import ExpMan.utils.fileUpdater 
 
 from ExpMan.core.ExperimentCase import ExperimentCase
 
@@ -18,6 +19,7 @@ class ExperimentTest(object):
         self.tags = tags
         self.parameters = parameters
         self.comment = comment
+        self.postComment = postComment
         self.close = close
         self.user = user
         self.valid = valid
@@ -142,7 +144,8 @@ class ExperimentTest(object):
         raise "Not implemented yet"
 		
     def modifyPostComment(self, postComment):
-        raise "Not implemented yet"
+        ExpMan.utils.fileUpdater.updateLine(self.experiment.folder +"/experimentsPostComments.log",self.number,postComment)
+        self.postComment=postComment
     
     def reload_(self, comment):
         raise "Not implemented yet"
@@ -154,7 +157,9 @@ class ExperimentTest(object):
         raise "Not implemented yet"
         
     def unvalidate(self):
-        raise "Not implemented yet"
+        ExpMan.utils.fileUpdater.update(self.experiment.folder +"/experimentsTest.log",self.number,3,"False")
+        self.valid=False
+        self.experiment.updateValidLog()
         
     def execute(self, nThread, refresh_time=.2,shuffled=True):
         
@@ -198,6 +203,11 @@ class ExperimentTest(object):
         ret += "Comment:" + self.comment
         return ret
                     
+    def shortInfo(self):
+        ret= "ID" + str(self.number) 
+        ret+="\nComment: " + str(self.comment)
+        ret+="\nPostComment: " + str(self.postComment)
+        return ret
         
-        
+    
     
